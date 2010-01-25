@@ -1,8 +1,5 @@
-$LOAD_PATH.unshift(File.dirname(__FILE__))
-
-require 'rubygems'
-require 'activesupport'
-require 'activerecord'
+require 'active_support'
+require 'active_record'
 
 require 'cash/lock'
 require 'cash/transactional'
@@ -23,12 +20,14 @@ require 'cash/query/primary_key'
 require 'cash/query/calculation'
 
 require 'cash/util/array'
+require 'cash/util/marshal'
+require 'cash/util/active_record'
 
 class ActiveRecord::Base
   def self.is_cached(options = {})
     options.assert_valid_keys(:ttl, :repository, :version)
     include Cash
-    Cash::Config::Config.create(self, options)
+    ::Cash::Config::Config.create(self, options)
   end
 end
 

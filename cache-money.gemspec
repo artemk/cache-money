@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name     = "cache-money"
-  s.version  = "0.2.5"
-  s.date     = "2008-11-24"
+  s.version  = "0.2.6.pre"
+  s.date     = "2009-12-20"
   s.summary  = "Write-through and Read-through Cacheing for ActiveRecord"
   s.email    = "nick@twitter.com"
   s.homepage = "http://github.com/nkallen/cache-money"
@@ -27,6 +27,8 @@ Gem::Specification.new do |s|
     "lib/cash/request.rb",
     "lib/cash/transactional.rb",
     "lib/cash/util/array.rb",
+    "lib/cash/util/marshal.rb",
+    "lib/cash/util/active_record.rb",
     "lib/cash/write_through.rb",
     "lib/cache_money.rb"
   ]
@@ -45,7 +47,7 @@ Gem::Specification.new do |s|
     "spec/cash/write_through_spec.rb",
     "spec/spec_helper.rb"
   ]
-  s.add_dependency("activerecord", [">= 2.2.0"])
-  s.add_dependency("activesupport", [">= 2.2.0"])
+  s.add_dependency("activerecord", ["~> 2.3.0"])
+  s.add_dependency("activesupport", ["~> 2.3.0"])
   s.add_dependency("memcache-client", [">= 1.5.0 "])
 end

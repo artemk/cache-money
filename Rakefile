@@ -1,15 +1,9 @@
-RAILS_ROOT = "#{File.dirname(__FILE__)}"
-
-require 'rubygems'
-require 'spec/rake/spectask'
-
-require 'config/environment'
+require File.expand_path('../config/environment', __FILE__)
 
 require 'rake'
 require 'rake/testtask'
 require 'rake/rdoctask'
-
-require 'tasks/rails'
+require 'spec/rake/spectask'
 
 Spec::Rake::SpecTask.new do |t|
   t.spec_files = FileList['spec/**/*_spec.rb']

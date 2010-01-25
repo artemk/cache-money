@@ -191,6 +191,22 @@ For queries on multiple attributes, combination indexes are necessary. For examp
       index [:name, :age]
     end
 
+#### Optional: Selectively cache specific models
+
+There may be times where you only want to cache some of your models instead of everything.
+
+In that case, you can omit the following from your `config/initializers/cache_money.rb`
+
+	class ActiveRecord::Base
+	  is_cached :repository => $cache
+	end
+		
+After that is removed, you can simple put this at the top of your models you wish to cache:
+
+	is_cached :repository => $cache
+
+Just make sure that you put that line before any of your index directives.
+
 ## Version ##
 
 WARNING: This is currently a RELEASE CANDIDATE. A version of this code is in production use at Twitter but the extraction and refactoring process may have introduced bugs and/or performance problems. There are no known major defects at this point, but still.

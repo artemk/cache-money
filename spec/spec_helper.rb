@@ -1,12 +1,11 @@
 dir = File.dirname(__FILE__)
 $LOAD_PATH.unshift "#{dir}/../lib"
 
-require 'rubygems'
+require File.join(dir, '../config/environment')
 require 'spec'
 require 'pp'
 require 'cache_money'
 require 'memcache'
-require File.join(dir, '../config/environment')
 
 Spec::Runner.configure do |config|
   config.mock_with :rr
@@ -32,12 +31,18 @@ Spec::Runner.configure do |config|
 
     Character = Class.new(ActiveRecord::Base)
     Story = Class.new(ActiveRecord::Base)
+    Plot = Class.new(ActiveRecord::Base)
+    
     Story.has_many :characters
 
     Story.class_eval do
       index :title
       index [:id, :title]
       index :published
+    end
+
+    Plot.class_eval do
+      index :id, :order => :desc
     end
 
     Epic = Class.new(Story)
