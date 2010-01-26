@@ -46,8 +46,10 @@ module Cash
       end
     end
 
-    def transaction_with_cache_transaction(&block)
-      repository.transaction { transaction_without_cache_transaction(&block) }
+    def transaction_with_cache_transaction(*args)
+      transaction_without_cache_transaction(*args) do
+        repository.transaction { yield }
+      end
     end
   end
 end
