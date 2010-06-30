@@ -1,4 +1,4 @@
-require File.join(File.dirname(__FILE__), '..', 'spec_helper')
+require "spec_helper"
 
 module Cash
   describe 'Ordering' do
@@ -86,6 +86,12 @@ module Cash
               FairyTale.find(:all, :conditions => { :title => @title }, :order => 'stories.id').should == @fairy_tales
               FairyTale.find(:all, :conditions => { :title => @title }, :order => '`stories`.id').should == @fairy_tales
               FairyTale.find(:all, :conditions => { :title => @title }, :order => '`stories`.`id`').should == @fairy_tales
+            end
+            
+            describe 'when the order is passed as a symbol' do
+              it 'works' do
+                FairyTale.find(:all, :conditions => { :title => @title }, :order => :id)
+              end
             end
           end
 

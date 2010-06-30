@@ -1,7 +1,7 @@
 module Cash
   module Query
     class Abstract
-      delegate :with_exclusive_scope, :get, :table_name, :indices, :find_from_ids_without_cache, :cache_key, :columns_hash, :to => :@active_record
+      delegate :with_exclusive_scope, :get, :table_name, :indices, :find_from_ids_without_cache, :cache_key, :columns_hash, :logger, :to => :@active_record
 
       def self.perform(*args)
         new(*args).perform
@@ -9,6 +9,15 @@ module Cash
 
       def initialize(active_record, options1, options2)
         @active_record, @options1, @options2 = active_record, options1, options2 || {}
+
+        # if @options2.empty? and active_record.base_class != active_record
+        #   @options2 = { :conditions => { active_record.inheritance_column => active_record.to_s }}
+        # end
+        # if active_record.base_class != active_record
+        #   @options2[:conditions] = active_record.merge_conditions(
+        #     @options2[:conditions], { active_record.inheritance_column => active_record.to_s }
+        #   )
+        # end
       end
 
       def perform(find_options = {}, get_options = {})
@@ -18,6 +27,7 @@ module Cash
           misses, missed_keys, objects = hit_or_miss(cache_keys, index, get_options)
           format_results(cache_keys, choose_deserialized_objects_if_possible(missed_keys, cache_keys, misses, objects))
         else
+          logger.debug("  \e[1;4;31mUNCACHEABLE\e[0m #{table_name} - #{find_options.inspect} - #{get_options.inspect} - #{@options1.inspect} - #{@options2.inspect}") if logger
           uncacheable
         end
       end
@@ -27,12 +37,14 @@ module Cash
       def order
         @order ||= begin
           if order_sql = @options1[:order] || @options2[:order]
-            matched, table_name, column_name, direction = *(ORDER.match(order_sql))
+            matched, table_name, column_name, direction = *(ORDER.match(order_sql.to_s))
             [column_name, direction =~ DESC ? :desc : :asc]
           else
             ['id', :asc]
           end
         end
+      rescue TypeError
+        ['id', :asc]
       end
 
       def limit
@@ -53,15 +65,16 @@ module Cash
 
       private
       def cacheable?(*optionss)
+        return false if @active_record.respond_to?(:cachable?) && ! @active_record.cachable?(*optionss)
         optionss.each { |options| return unless safe_options_for_cache?(options) }
         partial_indices = optionss.collect { |options| attribute_value_pairs_for_conditions(options[:conditions]) }
         return if partial_indices.include?(nil)
         attribute_value_pairs = partial_indices.sum.sort { |x, y| x[0] <=> y[0] }
-        
-        attribute_value_pairs.each do |attribute_value_pair|
-          return false if attribute_value_pair.last.is_a?(Array)
-        end
-        
+
+        # attribute_value_pairs.each do |attribute_value_pair|
+        #   return false if attribute_value_pair.last.is_a?(Array)
+        # end
+
         if index = indexed_on?(attribute_value_pairs.collect { |pair| pair[0] })
           if index.matches?(self)
             [attribute_value_pairs, index]
@@ -92,7 +105,7 @@ module Cash
         when Hash
           conditions.to_a.collect { |key, value| [key.to_s, value] }
         when String
-          parse_indices_from_condition(conditions)
+          parse_indices_from_condition(conditions.gsub('1 = 1 AND ', '')) #ignore unnecessary conditions
         when Array
           parse_indices_from_condition(*conditions)
         when NilClass
@@ -111,7 +124,19 @@ module Cash
         conditions.split(AND).inject([]) do |indices, condition|
           matched, table_name, column_name, sql_value = *(KEY_EQ_VALUE.match(condition))
           if matched
-            value = sql_value == '?' ? values.shift : columns_hash[column_name].type_cast(sql_value)
+            # value = sql_value == '?' ? values.shift : columns_hash[column_name].type_cast(sql_value)
+            if sql_value == '?'
+              value = values.shift
+            else
+              column = columns_hash[column_name]
+              raise "could not find column #{column_name} in columns #{columns_hash.keys.join(',')}" if column.nil?
+              if sql_value[0..0] == ':' && values && values.count > 0 && values[0].is_a?(Hash)
+                symb  = sql_value[1..-1].to_sym
+                value = column.type_cast(values[0][symb])
+              else
+                value = column.type_cast(sql_value)
+              end
+            end
             indices << [column_name, value]
           else
             return nil
@@ -121,6 +146,8 @@ module Cash
 
       def indexed_on?(attributes)
         indices.detect { |index| index == attributes }
+      rescue NoMethodError
+        nil
       end
       alias_method :index_for, :indexed_on?
 

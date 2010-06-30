@@ -1,4 +1,4 @@
-require File.join(File.dirname(__FILE__), '..', 'spec_helper')
+require "spec_helper"
 
 module Cash
   describe Finders do
@@ -109,27 +109,28 @@ module Cash
           end
         end
 
-        describe '#find(:first, ..., :offset => ...)' do
-          it "#finds the object in the correct order" do
-            story1 = Story.create!(:title => 'title1')
-            story2 = Story.create!(:title => story1.title)
-            Story.find(:first, :conditions => { :title => story1.title }, :offset => 1).should == story2
+        describe '#find(:first, ...)' do
+          describe '#find(:first, ..., :offset => ...)' do
+            it "#finds the object in the correct order" do
+              story1 = Story.create!(:title => 'title1')
+              story2 = Story.create!(:title => story1.title)
+              Story.find(:first, :conditions => { :title => story1.title }, :offset => 1).should == story2
+            end
           end
-        end
 
-        describe '#find(:first, :conditions => [])' do
-          it 'works' do
-            story = Story.create!
-            Story.find(:first, :conditions => []).should == story
+          describe '#find(:first, :conditions => [])' do
+            it 'finds the object in the correct order' do
+              story = Story.create!
+              Story.find(:first, :conditions => []).should == story
+            end
           end
-        end
         
-        describe "#find(:first, :conditions => '...')" do
-          it "uses the active record instance to typecast values extracted from the conditions" do
-            story1 = Story.create! :title => 'a story', :published => true
-            story2 = Story.create! :title => 'another story', :published => false
-            Story.get('published/false').should == [story2.id]
-            Story.find(:first, :conditions => 'published = 0').should == story2
+          describe "#find(:first, :conditions => '...')" do
+            it "coerces ruby values to the appropriate database values" do
+              story1 = Story.create! :title => 'a story', :published => true
+              story2 = Story.create! :title => 'another story', :published => false
+              Story.find(:first, :conditions => 'published = 0').should == story2
+            end
           end
         end
       end
@@ -184,6 +185,17 @@ module Cash
           $memcache.flush_all
           Story.find(story.id).should == story
         end
+
+        it "handles after_find on model" do
+          class AfterFindStory < Story
+            def after_find
+              self.title
+            end
+          end
+          lambda do
+            AfterFindStory.create!(:title => 'a story') 
+          end.should_not raise_error(ActiveRecord::MissingAttributeError)
+        end
       end
 
       describe '#find(id1, id2, ...)' do
@@ -193,6 +205,19 @@ module Cash
           $memcache.flush_all
           Story.find(story1.id, story2.id).should == [story1, story2]
         end
+      end
+    end
+    
+    describe 'loading' do
+      it "should be able to create a record for an ar subclass that was loaded before cache money" do
+        $debug = true
+        session = ActiveRecord::SessionStore::Session.new
+        session.session_id = "12345"
+        session.data = "foobarbaz"
+
+        lambda {
+          session.save!
+        }.should_not raise_error
       end
     end
   end

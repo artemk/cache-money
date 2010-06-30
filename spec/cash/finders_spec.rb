@@ -1,4 +1,4 @@
-require File.join(File.dirname(__FILE__), '..', 'spec_helper')
+require "spec_helper"
 
 module Cash
   describe Finders do
@@ -30,11 +30,19 @@ module Cash
           end
 
           describe '#find(:first, ...)' do
-            describe '#find(:first, :conditions => { :id => ?})' do
+            describe '#find(:first, :conditions => { :id => ? })' do
               it "does not use the database" do
                 story = Story.create!
                 mock(Story.connection).execute.never
                 Story.find(:first, :conditions => { :id => story.id }).should == story
+              end
+            end
+
+            describe '#find(:first, :conditions => [ "id = :id", { :id => story.id } ])' do
+              it "does not use the database" do
+                story = Story.create!
+                mock(Story.connection).execute.never
+                Story.find(:first, :conditions => [ "id = :id", { :id => story.id } ]).should == story
               end
             end
 
@@ -105,6 +113,15 @@ module Cash
                     mock(Story.connection).execute.never
                     Story.find(:first, :conditions => "`stories`.title = '#{story.title }'") \
                       .should == story
+                  end
+                end
+                
+                describe 'when the attributes must be coerced to sql values' do
+                  it 'does not use the database' do
+                    story1 = Story.create!(:published => true)
+                    story2 = Story.create!(:published => false)
+                    mock(Story.connection).execute.never
+                    Story.find(:first, :conditions => 'published = 0').should == story2
                   end
                 end
               end
@@ -330,9 +347,19 @@ module Cash
         end
 
         describe '#find_by_attr' do
+          before(:each) do
+            Story.find_by_title(@story.title)  # populates cache for title with [@story.id]
+          end
+          
           it 'populates the cache' do
-            Story.find_by_title(@story.title)
             Story.fetch("title/#{@story.title}").should == [@story.id]
+          end
+          
+          it 'populates the cache when finding by non-primary-key attribute' do
+            Story.find_by_title(@story.title)  # populates cache for id with record
+            
+            mock(Story.connection).execute.never
+            Story.find_by_title(@story.title).id.should == @story.id  # should hit cache only
           end
         end
 

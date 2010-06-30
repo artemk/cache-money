@@ -22,15 +22,16 @@ module Cash
       end
     end
 
-    def method_missing(method, *args, &block)
-      @cache.send(method, *args, &block)
-    end
-
     def respond_to?(method)
       @cache.respond_to?(method)
     end
 
     private
+
+    def method_missing(method, *args, &block)
+      @cache.send(method, *args, &block)
+    end
+
     def begin_transaction
       @cache = Buffered.push(@cache, @lock)
     end

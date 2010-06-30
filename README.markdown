@@ -143,7 +143,7 @@ Sometimes your code will request the same cache key twice in one request. You ca
 #### Step 1: Get the GEM ####
 
     % gem sources -a http://gems.github.com
-    % sudo gem install nkallen-cache-money
+    % sudo gem install ngmoco-cache-money
     
 #### Step 2: Configure MemCached.
 
@@ -155,29 +155,18 @@ Place a YAML file in `config/memcached.yml` with contents like:
       sessions: false
       debug: false
       servers: localhost:11211
+      cache_money: true
 
     development: 
        ....
-       
-#### Step 3: `config/initializers/cache_money.rb` ####
 
-Place this in `config/initializers/cache_money.rb`
+#### Step 3: `config/environment.rb` ####
+ config.gem "ngmoco-cache-money",
+   :lib => "cache_money",
+   :source => 'http://gems.github.com',
+   :version => '0.2.9'
 
-    require 'cache_money'
-    
-    config = YAML.load(IO.read(File.join(RAILS_ROOT, "config", "memcached.yml")))[RAILS_ENV]
-    $memcache = MemCache.new(config)
-    $memcache.servers = config['servers']
-
-    $local = Cash::Local.new($memcache)
-    $lock = Cash::Lock.new($memcache)
-    $cache = Cash::Transactional.new($local, $lock)
-
-    class ActiveRecord::Base
-      is_cached :repository => $cache
-    end
-
-#### Step 2: Add indices to your ActiveRecord models ####
+#### Step 4: Add indices to your ActiveRecord models ####
 
 Queries like `User.find(1)` will use the cache automatically. For more complex queries you must add indices on the attributes that you will query on. For example, a query like `User.find(:all, :conditions => {:name => 'bob'})` will require an index like:
 

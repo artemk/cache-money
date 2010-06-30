@@ -1,4 +1,4 @@
-require File.join(File.dirname(__FILE__), '..', 'spec_helper')
+require "spec_helper"
 
 module Cash
   describe Transactional do
@@ -20,7 +20,7 @@ module Cash
       end
 
       it "increments through the real cache" do
-        @cache.set(@key, 0)
+        @cache.set(@key, 0, 0, true)
         @cache.incr(@key, 3)
 
         @cache.get(@key, true).to_i.should == 3
@@ -28,7 +28,7 @@ module Cash
       end
 
       it "decrements through the real cache" do
-        @cache.set(@key, 0)
+        @cache.set(@key, 0, 0, true)
         @cache.incr(@key, 3)
         @cache.decr(@key, 2)
 
@@ -73,14 +73,14 @@ module Cash
           it 'returns a hash' do
             @cache.set('key1', @value)
             @cache.set('key2', @value)
-            @cache.get_multi(['key1', 'key2']).should == { 'key1' => @value, 'key2' => @value }
+            @cache.get_multi('key1', 'key2').should == { 'key1' => @value, 'key2' => @value }
           end
         end
 
         describe 'when there are misses' do
           it 'only returns results for hits' do
             @cache.set('key1', @value)
-            @cache.get_multi(['key1', 'key2']).should == { 'key1' => @value }
+            @cache.get_multi('key1', 'key2').should == { 'key1' => @value }
           end
         end
       end
@@ -130,7 +130,7 @@ module Cash
       describe 'Increment and Decrement' do
         describe '#incr' do
           it "works" do
-            @cache.set(@key, 0)
+            @cache.set(@key, 0, 0, true)
             @cache.incr(@key)
             @cache.transaction do
               @cache.incr(@key).should == 2
@@ -139,7 +139,7 @@ module Cash
 
           it "is buffered" do
             @cache.transaction do
-              @cache.set(@key, 0)
+              @cache.set(@key, 0, 0, true)
               @cache.incr(@key, 2).should == 2
               @cache.get(@key).should == 2
               $memcache.get(@key).should == nil
@@ -158,7 +158,7 @@ module Cash
 
         describe '#decr' do
           it "works" do
-            @cache.set(@key, 0)
+            @cache.set(@key, 0, 0, true)
             @cache.incr(@key)
             @cache.transaction do
               @cache.decr(@key).should == 0
@@ -167,7 +167,7 @@ module Cash
 
           it "is buffered" do
             @cache.transaction do
-              @cache.set(@key, 0)
+              @cache.set(@key, 0, 0, true)
               @cache.incr(@key, 3)
               @cache.decr(@key, 2).should == 1
               @cache.get(@key, true).to_i.should == 1
@@ -185,7 +185,7 @@ module Cash
 
           it "bottoms out at zero" do
             @cache.transaction do
-              @cache.set(@key, 0)
+              @cache.set(@key, 0, 0, true)
               @cache.incr(@key, 1)
               @cache.get(@key, true).should == 1
               @cache.decr(@key)
@@ -203,7 +203,7 @@ module Cash
             @cache.transaction do
               @cache.set('key1', @value)
               @cache.set('key2', [])
-              @cache.get_multi(['key1', 'key2']).should == { 'key1' => @value, 'key2' => [] }
+              @cache.get_multi('key1', 'key2').should == { 'key1' => @value, 'key2' => [] }
             end
           end
         end
@@ -213,7 +213,7 @@ module Cash
             @cache.transaction do
               @cache.set('key1', @value)
               @cache.set('key2', @value)
-              @cache.get_multi(['key1', 'key2']).should == { 'key1' => @value, 'key2' => @value }
+              @cache.get_multi('key1', 'key2').should == { 'key1' => @value, 'key2' => @value }
             end
           end
         end
@@ -222,7 +222,7 @@ module Cash
           it 'only returns results for hits' do
             @cache.transaction do
               @cache.set('key1', @value)
-              @cache.get_multi(['key1', 'key2']).should == { 'key1' => @value }
+              @cache.get_multi('key1', 'key2').should == { 'key1' => @value }
             end
           end
         end
@@ -286,8 +286,8 @@ module Cash
           @cache.transaction do
             @cache.set('key1', @value)
             @cache.set('key2', @value)
-            @cache.get_multi(['key1', 'key2']).should == { 'key1' => @value, 'key2' => @value }
-            $memcache.get_multi(['key1', 'key2']).should == {}
+            @cache.get_multi('key1', 'key2').should == { 'key1' => @value, 'key2' => @value }
+            $memcache.get_multi('key1', 'key2').should == {}
           end
         end
 
@@ -336,7 +336,7 @@ module Cash
 
       describe '#incr' do
         it "increment be atomic" do
-          @cache.set(@key, 0)
+          @cache.set(@key, 0, 0, true)
           @cache.transaction do
             @cache.incr(@key)
             $memcache.incr(@key)
@@ -346,11 +346,11 @@ module Cash
         end
 
         it "interleaved, etc. increments and sets be ordered" do
-          @cache.set(@key, 0)
+          @cache.set(@key, 0, 0, true)
           @cache.transaction do
             @cache.incr(@key)
             @cache.incr(@key)
-            @cache.set(@key, 0)
+            @cache.set(@key, 0, 0, true)
             @cache.incr(@key)
             @cache.incr(@key)
           end
@@ -361,7 +361,7 @@ module Cash
 
       describe '#decr' do
         it "decrement be atomic" do
-          @cache.set(@key, 0)
+          @cache.set(@key, 0, 0, true)
           @cache.incr(@key, 3)
           @cache.transaction do
             @cache.decr(@key)
@@ -569,6 +569,10 @@ module Cash
           $memcache.get('key2').should == nil
         end
       end
+    end
+
+    it "should have method_missing as a private method" do
+      Transactional.private_instance_methods.should include("method_missing")
     end
   end
 end

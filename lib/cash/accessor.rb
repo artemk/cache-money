@@ -11,8 +11,10 @@ module Cash
       def fetch(keys, options = {}, &block)
         case keys
         when Array
+          return {} if keys.empty?
+          
           keys = keys.collect { |key| cache_key(key) }
-          hits = repository.get_multi(keys)
+          hits = repository.get_multi(*keys)
           if (missed_keys = keys - hits.keys).any?
             missed_values = block.call(missed_keys)
             hits.merge!(missed_keys.zip(Array(missed_values)).to_hash_without_nils)
@@ -38,23 +40,25 @@ module Cash
       end
 
       def add(key, value, options = {})
-        if repository.add(cache_key(key), value, options[:ttl] || 0, options[:raw]) == "NOT_STORED\r\n"
+        if repository.add(cache_key(key), value, options[:ttl] || cache_config.ttl, options[:raw]) == "NOT_STORED\r\n"
           yield if block_given?
         end
       end
 
       def set(key, value, options = {})
-        repository.set(cache_key(key), value, options[:ttl] || 0, options[:raw])
+        repository.set(cache_key(key), value, options[:ttl] || cache_config.ttl, options[:raw])
       end
- 
-      def incr(key, delta = 1, ttl = 0)
+
+      def incr(key, delta = 1, ttl = nil)
+        ttl ||= cache_config.ttl
         repository.incr(cache_key = cache_key(key), delta) || begin
           repository.add(cache_key, (result = yield).to_s, ttl, true) { repository.incr(cache_key) }
           result
         end
       end
 
-      def decr(key, delta = 1, ttl = 0)
+      def decr(key, delta = 1, ttl = nil)
+        ttl ||= cache_config.ttl
         repository.decr(cache_key = cache_key(key), delta) || begin
           repository.add(cache_key, (result = yield).to_s, ttl, true) { repository.decr(cache_key) }
           result

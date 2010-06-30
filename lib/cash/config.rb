@@ -1,5 +1,10 @@
 module Cash
   module Config
+    def self.create(active_record, options, indices = [])
+      active_record.cache_config = Cash::Config::Config.new(active_record, options)
+      indices.each { |i| active_record.index i.attributes, i.options }
+    end
+    
     def self.included(a_module)
       a_module.module_eval do
         extend ClassMethods
@@ -10,8 +15,11 @@ module Cash
     module ClassMethods
       def self.extended(a_class)
         class << a_class
-          attr_reader :cache_config
-          delegate :repository, :indices, :to => :@cache_config
+          def cache_config
+            @cache_config ? @cache_config : superclass.cache_config
+          end
+          
+          delegate :repository, :indices, :to => :cache_config
           alias_method_chain :inherited, :cache_config
         end
       end
@@ -22,7 +30,7 @@ module Cash
       end
 
       def index(attributes, options = {})
-        options.assert_valid_keys(:ttl, :order, :limit, :buffer)
+        options.assert_valid_keys(:ttl, :order, :limit, :buffer, :order_column)
         (@cache_config.indices.unshift(Index.new(@cache_config, self, attributes, options))).uniq!
       end
 
@@ -38,11 +46,6 @@ module Cash
     class Config
       attr_reader :active_record, :options
 
-      def self.create(active_record, options, indices = [])
-        active_record.cache_config = new(active_record, options)
-        indices.each { |i| active_record.index i.attributes, i.options }
-      end
-
       def initialize(active_record, options = {})
         @active_record, @options = active_record, options
       end
@@ -52,7 +55,7 @@ module Cash
       end
 
       def ttl
-        @options[:ttl]
+        @ttl ||= @options[:ttl] || repository.default_ttl || 1.day
       end
 
       def version
@@ -64,7 +67,7 @@ module Cash
       end
 
       def inherit(active_record)
-        self.class.create(active_record, @options, indices)
+        Cash::Config.create(active_record, @options, indices)
       end
     end
   end

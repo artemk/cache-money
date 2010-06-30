@@ -62,7 +62,7 @@ module Cash
       buffer_command Command.new(:delete, key, *options)
     end
 
-    def get_multi(keys)
+    def get_multi(*keys)
       values = keys.collect { |key| get(key) }
       keys.zip(values).to_hash_without_nils
     end
@@ -80,15 +80,12 @@ module Cash
       end
     end
 
-    def method_missing(method, *args, &block)
-      @cache.send(method, *args, &block)
-    end
-
     def respond_to?(method)
       @cache.respond_to?(method)
     end
 
     protected
+
     def perform_commands
       @commands.each do |command|
         command.call(@cache)
@@ -97,6 +94,12 @@ module Cash
 
     def buffer_command(command)
       @commands << command
+    end
+    
+    private
+    
+    def method_missing(method, *args, &block)
+      @cache.send(method, *args, &block)
     end
   end
 
