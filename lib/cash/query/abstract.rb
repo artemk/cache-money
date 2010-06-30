@@ -59,10 +59,6 @@ module Cash
         false
       end
 
-      def order_matters?
-        true
-      end
-
       private
       def cacheable?(*optionss)
         return false if @active_record.respond_to?(:cachable?) && ! @active_record.cachable?(*optionss)
@@ -191,7 +187,7 @@ module Cash
 
       def find_from_keys(*missing_keys)
         missing_ids = Array(missing_keys).flatten.collect { |key| key.split('/')[2].to_i }
-        find_from_ids_without_cache(missing_ids, @options1)
+        find_from_ids_without_cache(missing_ids, {})
       end
     end
   end
