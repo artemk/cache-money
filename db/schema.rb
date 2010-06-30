@@ -10,6 +10,9 @@ ActiveRecord::Schema.define(:version => 2) do
     t.string "name"
   end
   
+  create_table "plots", :force => true do |t|
+  end
+  
   create_table :sessions, :force => true do |t|
     t.string :session_id
     t.text   :data
