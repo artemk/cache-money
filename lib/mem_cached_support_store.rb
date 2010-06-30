@@ -1,4 +1,5 @@
-require 'memcached'
+begin
+  require 'memcached'
 
     # A cache store implementation which stores data in Memcached:
     # http://www.danga.com/memcached/
@@ -133,3 +134,8 @@ require 'memcached'
           !(options && options[:raw])
         end
     end
+  
+rescue Exception => e
+   # Memcached wasn't available so neither can the store be.  Reraise any other error.
+   raise unless e.is_a?(LoadError) && e.message =~ /memcached/
+end

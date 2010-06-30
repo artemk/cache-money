@@ -1,4 +1,4 @@
-# begin
+begin
   require 'memcached'
 
       class MemCachedSessionStore < ActionController::Session::AbstractStore
@@ -44,6 +44,7 @@
             return false
           end
       end
-# rescue LoadError
-#   # Memcached wasn't available so neither can the store be
-# end
+rescue Exception => e
+   # Memcached wasn't available so neither can the store be.  Reraise any other error.
+   raise unless e.is_a?(LoadError) && e.message =~ /memcached/
+end

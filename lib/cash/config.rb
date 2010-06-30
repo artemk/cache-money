@@ -55,7 +55,7 @@ module Cash
       end
 
       def ttl
-        @ttl ||= @options[:ttl] || repository.default_ttl || 1.day
+        @ttl ||= @options[:ttl] || default_ttl
       end
 
       def version
@@ -69,6 +69,14 @@ module Cash
       def inherit(active_record)
         Cash::Config.create(active_record, @options, indices)
       end
+      
+      private
+      
+        def default_ttl
+          default = repository.default_ttl if repository.respond_to?(:default_ttl)
+          default ||= 1.day
+          default
+        end 
     end
   end
 end
