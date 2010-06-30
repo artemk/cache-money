@@ -5,7 +5,7 @@ rescue LoadError
     require 'rubygems'
     require 'bundler'
     Bundler.setup
-  rescue
+  rescue Exception => e
     require File.expand_path('../config/environment', __FILE__)
   end
 end
