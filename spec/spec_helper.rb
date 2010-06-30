@@ -49,7 +49,7 @@ Spec::Runner.configure do |config|
     end
 
     Plot.class_eval do
-      index :id, :order => :desc
+      index :id
     end
 
     Epic = Class.new(Story)
