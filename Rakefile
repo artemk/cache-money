@@ -20,7 +20,7 @@ rescue MissingSourceFile
 end
 
 jt = Jeweler::Tasks.new do |gem|
-  gem.name = "ngmoco-cache-money"
+  gem.name = "betamatt-cache-money"
   gem.summary = "Write-through and Read-through Cacheing for ActiveRecord"
   gem.description = "Write-through and Read-through Cacheing for ActiveRecord"
   gem.email = "teamplatform@ngmoco.com"
