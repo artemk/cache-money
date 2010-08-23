@@ -40,8 +40,8 @@ jt = Jeweler::Tasks.new do |gem|
     "db/schema.rb",
     "spec/**/*.rb"
   ]
-  gem.add_dependency("activerecord", [">= 2.2.0"])
-  gem.add_dependency("activesupport", [">= 2.2.0"])
+  gem.add_dependency("activerecord", ["~> 2.1.0"])
+  gem.add_dependency("activesupport", ["~> 2.1.0"])
 end
 Jeweler::GemcutterTasks.new
 

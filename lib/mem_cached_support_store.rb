@@ -32,8 +32,6 @@ begin
         addresses = ["localhost"] if addresses.empty?
         @addresses = addresses
         @data = Memcached.new(addresses, options)
-
-        extend ActiveSupport::Cache::Strategy::LocalCache
       end
 
       def read(key, options = nil) # :nodoc:

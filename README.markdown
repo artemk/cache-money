@@ -6,6 +6,8 @@ Read-Through: Queries like `User.find(:all, :conditions => ...)` will first look
 
 Write-Through: As objects are created, updated, and deleted, all of the caches are *automatically* kept up-to-date and coherent.
 
+Rails 2.1 specific backport.
+
 ## Howto ##
 ### What kinds of queries are supported? ###
 
