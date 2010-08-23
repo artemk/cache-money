@@ -38,7 +38,6 @@ Spec::Runner.configure do |config|
 
     Character = Class.new(ActiveRecord::Base)
     Story = Class.new(ActiveRecord::Base)
-    Plot = Class.new(ActiveRecord::Base)
     
     Story.has_many :characters
 
