@@ -187,7 +187,10 @@ module Cash
 
       def find_from_keys(*missing_keys)
         missing_ids = Array(missing_keys).flatten.collect { |key| key.split('/')[2].to_i }
-        find_from_ids_without_cache(missing_ids, {})
+        options = {}
+        order_sql = @options1[:order] || @options2[:order]
+        options[:order] = order_sql if order_sql
+        find_from_ids_without_cache(missing_ids, options)
       end
     end
   end

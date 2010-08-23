@@ -48,8 +48,9 @@ Spec::Runner.configure do |config|
       index :published
     end
 
-    Plot.class_eval do
-      index :id
+    Short = Class.new(Story)
+    Short.class_eval do
+      index :subtitle, :order_column => 'title'
     end
 
     Epic = Class.new(Story)

@@ -350,8 +350,8 @@ module Cash
           it 'populates the cache when finding by non-primary-key attribute' do
             Story.find_by_title(@story.title)  # populates cache for id with record
             
-            mock(Story.connection).execute.never
-            Story.find_by_title(@story.title).id.should == @story.id  # should hit cache only
+            mock(Story.connection).execute.never  # should hit cache only
+            Story.find_by_title(@story.title).id.should == @story.id
           end
         end
 
@@ -359,6 +359,32 @@ module Cash
           it 'populates the cache' do
             Story.find(:all, :conditions => { :title => @story.title })
             Story.fetch("title/#{@story.title}").should == [@story.id]
+          end
+        end
+
+        describe '#find(:all, :conditions => ..., :order => ...)' do
+          before(:each) do
+            @short1 = Short.create(:title => 'title',
+              :subtitle => 'subtitle')
+            @short2 = Short.create(:title => 'another title',
+              :subtitle => 'subtitle')
+            $memcache.flush_all
+            Short.find(:all, :conditions => { :subtitle => @short1.subtitle },
+              :order => 'title')
+          end
+
+          it 'populates the cache' do
+            Short.fetch("subtitle/subtitle").should_not be_blank
+          end
+
+          it 'returns objects in the correct order' do
+            Short.fetch("subtitle/subtitle").should ==
+              [@short2.id, @short1.id]
+          end
+
+          it 'finds objects in the correct order' do
+            Short.find(:all, :conditions => { :subtitle => @short1.subtitle },
+              :order => 'title').map(&:id).should == [@short2.id, @short1.id]
           end
         end
 
