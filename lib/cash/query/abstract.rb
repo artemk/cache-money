@@ -190,7 +190,7 @@ module Cash
         options = {}
         order_sql = @options1[:order] || @options2[:order]
         options[:order] = order_sql if order_sql
-        find_from_ids_without_cache(missing_ids, options)
+        with_exclusive_scope { find_from_ids_without_cache(missing_ids, options) }
       end
     end
   end
