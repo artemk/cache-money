@@ -6,6 +6,7 @@ rescue LoadError
     require 'bundler'
     Bundler.setup
   rescue Exception => e
+    puts e.message
     require File.expand_path('../config/environment', __FILE__)
   end
 end
@@ -19,6 +20,7 @@ rescue MissingSourceFile
   exit 1
 end
 
+require 'jeweler'
 jt = Jeweler::Tasks.new do |gem|
   gem.name = "betamatt-cache-money"
   gem.summary = "Write-through and Read-through Cacheing for ActiveRecord"
