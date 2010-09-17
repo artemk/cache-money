@@ -22,7 +22,7 @@ end
 
 require 'jeweler'
 jt = Jeweler::Tasks.new do |gem|
-  gem.name = "betamatt-cache-money"
+  gem.name = "artemk-cache-money"
   gem.summary = "Write-through and Read-through Cacheing for ActiveRecord"
   gem.description = "Write-through and Read-through Cacheing for ActiveRecord"
   gem.email = "teamplatform@ngmoco.com"
@@ -73,6 +73,6 @@ task :publish => [ :spec, :build ] do
   system "git tag v#{jt.jeweler.version}"
   system "git push origin v#{jt.jeweler.version}"
   system "git push origin master"
-  system "gem push pkg/ngmoco-cache-money-#{jt.jeweler.version}.gem"
+  system "gem push pkg/artemk-cache-money-#{jt.jeweler.version}.gem"
   system "git clean -fd"
 end
